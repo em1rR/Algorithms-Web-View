@@ -6,6 +6,22 @@
     <title>Pagerank Algoritması Görselleştirme</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+         .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Ekran yüksekliği kadar alan kapla */
+        }
+
+        svg {
+            /* İstediğiniz boyutları belirleyebilirsiniz */
+            width: 1000px;
+            height: 500px;
+
+            border: 1px solid #000; 
+            box-sizing: border-box;
+        }
+
         .node {
             fill: #3498db;
             stroke: #2980b9;
@@ -30,36 +46,117 @@
     </style>
 </head>
 <body>
-    <svg width="400" height="300"></svg>
-
+    <div class="container">
+        <svg width="1000" height="300"></svg>
+        <!-- <div id="siralamaBilgisi" style="position: absolute; top: 20px; left: 20px; background-color: white; padding: 10px;">
+            Şu anki sıralama: [Burada Sıralama Bilgisi Olacak]
+        </div> -->
+        
+    </div>
     <script>
-        var svg = d3.select("svg"),
+
+
+        // var svg = d3.select("svg"),
+        //     width = +svg.attr("width"),
+        //     height = +svg.attr("height");
+
+        
+        fetch('https://localhost:7220/controller/PageRank') // API URL'sini buraya ekleyin
+            .then(response => response.json())
+            .then(data => {
+                // Veri çekildikten sonra yapılacak işlemler
+                console.log(data); // Veriyi konsola yazdırabilirsiniz
+
+                // Görselleştirme kodu buraya gelecek
+                visualizeData(data);
+            })
+            .catch(error => {
+                console.error('Veri çekme hatası:', error);
+            });
+
+        function visualizeData(data) {
+            // D3.js ile veriyi kullanarak görselleştirme kodunu buraya ekleyin
+
+            // Örnek: Veriyi kullanarak çemberleri ve bağları oluşturun
+
+            var svg = d3.select("svg"),
             width = +svg.attr("width"),
             height = +svg.attr("height");
 
-        var nodes = [
-            { id: "A", x: width / 4, y: height / 2 },
-            { id: "B", x: width / 2, y: height / 4 },
-            { id: "C", x: width / 2, y: (3 * height) / 4 },
-            { id: "D", x: (3 * width) / 4, y: height / 2 }
-        ];
+            // var nodes = [
+            //     { id: "A", x: width / 4, y: height / 2 },
+            //     { id: "B", x: width / 2, y: height / 4 },
+            //     { id: "C", x: width / 2, y: (3 * height) / 4 },
+            //     { id: "D", x: (3 * width) / 4, y: height / 2 }
+            // ];
 
-        var links = [
-            { source: "A", target: "B" },
-            { source: "C", target: "A" },
-            { source: "D", target: "A" },
-            { source: "B", target: "D" },
-            { source: "A", target: "C" }
-        ];
+            // var links = [
+            //     { source: "A", target: "B" },
+            //     { source: "C", target: "A" },
+            //     { source: "D", target: "A" },
+            //     { source: "B", target: "D" },
+            //     { source: "A", target: "C" }
+            // ];
+            var nodes = data.rankList;
+            var links = data.outGoings;
 
-        var simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
-            .force("charge", d3.forceManyBody().strength(-200))
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("x", d3.forceX().x(d => d.x))
-            .force("y", d3.forceY().y(d => d.y));
+            // 'rankList' verilerini sırala ve sıralı bir liste oluştur
+            var container = document.querySelector(".container");
+            var sortedRankList = Object.entries(data.rankList)
+            .sort((a, b) => b[1] - a[1]); // Büyükten küçüğe sıralama
 
-        var link = svg.selectAll(".link")
+            // Rütbeye göre sıralanmış verileri yan tarafta listele
+            var rankListContainer = document.createElement("div");
+            rankListContainer.setAttribute("class", "rank-list-container");
+            container.appendChild(rankListContainer);
+
+            var rankListTitle = document.createElement("h2");
+            rankListTitle.textContent = "Sıralama Listesi";
+            rankListContainer.appendChild(rankListTitle);
+
+            var rankListUl = document.createElement("ul");
+            rankListUl.setAttribute("class", "rank-list");
+
+            sortedRankList.forEach(item => {
+            var listItem = document.createElement("li");
+            listItem.textContent = `${item[0]}: ${item[1]}`;
+            rankListUl.appendChild(listItem);
+            });
+
+            rankListContainer.appendChild(rankListUl);
+
+            // Örnek: Düğümler arasındaki bağlantıları otomatik olarak oluşturun
+
+            var outGoings = data.outGoings;
+            var nodes = [];
+            var links = [];
+
+            // Her bir düğüm için düğüm nesnesi oluşturun ve nodes listesine ekleyin
+            Object.keys(outGoings).forEach(nodeId => {
+                nodes.push({ id: nodeId, x: Math.random() * width, y: Math.random() * height });
+            });
+
+            // Her bir bağlantıyı oluşturun ve links listesine ekleyin
+            Object.keys(outGoings).forEach(sourceNode => {
+                var connectedNodes = outGoings[sourceNode];
+                
+                connectedNodes.forEach(targetNode => {
+                    links.push({ source: sourceNode, target: targetNode });
+                });
+            });
+
+            var simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(200))
+                .force("charge", d3.forceManyBody().strength(-200))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("x", d3.forceX().x(d => d.x))
+                .force("y", d3.forceY().y(d => d.y));
+
+
+
+            
+
+            var link = svg.selectAll(".link")
             .data(links)
             .enter().append("path")
             .attr("class", "link")
@@ -70,72 +167,88 @@
                     dr = Math.sqrt(dx * dx + dy * dy);
                 return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
             });
+                
 
-        var node = svg.selectAll(".node")
-            .data(nodes)
-            .enter().append("circle")
-            .attr("class", "node")
-            .attr("r", 20)
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
+            // Ok başlığını tanımlayın
+            svg.append("defs").append("marker")
+                .attr("id", "arrow")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 20) // Okun yuvarlağın kenarından başlayacağı mesafe
+                .attr("refY", 0)
+                .attr("markerWidth", 20) // Okun genişliği
+                .attr("markerHeight", 20) // Okun yüksekliği
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
 
-        var label = svg.selectAll(".label")
-            .data(nodes)
-            .enter().append("text")
-            .attr("class", "label")
-            .text(d => d.id)
-            .attr("x", d => d.x)
-            .attr("y", d => d.y)
-            .attr("dy", "0.35em")
-            .attr("text-anchor", "middle");
+            var node = svg.selectAll(".node")
+                .data(nodes)
+                .enter().append("circle")
+                .attr("class", "node")
+                .attr("r", d => {
+                    // Düğümün rank değerini kullanarak boyutu hesaplayın
+                    return 20 + 100 * data.rankList[d.id];
+                })
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
 
-        // Ok başlığını tanımlayın
-        svg.append("defs").append("marker")
-            .attr("id", "arrow")
-            .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 20)
-            .attr("refY", 0)
-            .attr("markerWidth", 10)
-            .attr("markerHeight", 10)
-            .attr("orient", "auto")
-            .append("path")
-            .attr("d", "M0,-5L10,0L0,5");
+            var label = svg.selectAll(".label")
+                .data(nodes)
+                .enter().append("text")
+                .attr("class", "label")
+                .text(d => d.id)
+                .attr("x", d => d.x)
+                .attr("y", d => d.y)
+                .attr("dy", "0.35em")
+                .attr("text-anchor", "middle");
 
-        simulation.on("tick", () => {
-            link.attr("d", d => {
-                var dx = d.target.x - d.source.x,
-                    dy = d.target.y - d.source.y,
-                    dr = Math.sqrt(dx * dx + dy * dy);
-                return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+
+            
+
+            
+
+                
+
+
+            simulation.on("tick", () => {
+                link.attr("d", d => {
+                    var dx = d.target.x - d.source.x,
+                        dy = d.target.y - d.source.y,
+                        dr = Math.sqrt(dx * dx + dy * dy);
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                });
+
+                node
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+
+                label
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
             });
 
-            node
-                .attr("cx", d => d.x)
-                .attr("cy", d => d.y);
+            // D3.js ile görselleştirme işlemleri burada devam eder
 
-            label
-                .attr("x", d => d.x)
-                .attr("y", d => d.y);
-        });
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
 
-        function dragstarted(event, d) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
         }
-
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
+        
     </script>
 </body>
 </html>
