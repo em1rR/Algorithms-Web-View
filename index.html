@@ -15,9 +15,8 @@
 
         svg {
             /* İstediğiniz boyutları belirleyebilirsiniz */
-            width: 1000px;
-            height: 500px;
-
+            width: 70vw;
+            height: 90vh;
             border: 1px solid #000; 
             box-sizing: border-box;
         }
@@ -43,25 +42,140 @@
         .arrow {
             fill: #ccc;
         }
+        #dropdown-container {
+            position: relative; 
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 999;
+        }
+
+        #dropdown {
+            /* Dropdown özelleştirmeleri */
+        }
+
+        #myButton {
+            margin-left: 10px; /* Dropdown ile buton arasında boşluk bırakır */
+            margin-right: 10px;
+            /* Diğer buton özelleştirmeleri */
+        }
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 0 auto;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .table-container {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-right: 20px; /* Tablolar arasında boşluk bırakmak için */
+        }
+        .select-container {
+            margin-bottom: 10px;
+        }
+        .rank-list-container {
+            margin-left: 10px;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <svg width="1000" height="300"></svg>
+        <svg width="800" height="650"></svg>
         <!-- <div id="siralamaBilgisi" style="position: absolute; top: 20px; left: 20px; background-color: white; padding: 10px;">
             Şu anki sıralama: [Burada Sıralama Bilgisi Olacak]
         </div> -->
+        <div id="dropdown-container">
+            <div class="select-container">
+                <label for="dropdown">Select Data Set:</label>
+                <select id="dropdown">
+                    <option value="A">A is most valuable</option>
+                    <option value="D">D is most valuable</option>
+                </select>
+                <button id="myButton">Buton</button>
+            </div>
+            <div class="table-container">
+                <table id="dataOutGoingTable">
+                    <thead>
+                        <tr>
+                            <th colspan="2">Incoming Links</th>
+                        </tr>
+                        <tr>
+                            <th>Düğüm</th>
+                            <th>Bağlantılar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <table id="dataInComingTable">
+                    <thead>
+                        <tr>
+                            <tr>
+                                <th colspan="2">Outgoing Links</th>
+                            </tr>
+                            <th>Düğüm</th>
+                            <th>Bağlantılar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <button id="calculateBtn">Calculate</button>
+        </div>
         
     </div>
     <script>
 
+        document.addEventListener("DOMContentLoaded", function() {
+            getPageRankCalculation("d");
+        });
 
-        // var svg = d3.select("svg"),
-        //     width = +svg.attr("width"),
-        //     height = +svg.attr("height");
+        // Dropdown ve buton öğelerini seçin
+        var dropdown = document.getElementById("dropdown");
+        var myButton = document.getElementById("myButton");
+        var calculateBtn = document.getElementById("calculateBtn")
+        var currentSelection = "";
+        // Butona tıklama olayını ekle
+        myButton.addEventListener("click", function () {
+            // Seçili değeri alın
+            var selectedValue = dropdown.value;
+            currentSelection = selectedValue;
+            // Seçili değeri bir API'ye göndermek için gerekli işlemi yapın
+            sendSelectedValueToAPI(selectedValue);
+        });
 
-        
-        fetch('https://localhost:7220/controller/PageRank') // API URL'sini buraya ekleyin
+        calculateBtn.addEventListener("click", function () {
+            clearVisualization()
+            getPageRankCalculation(currentSelection);
+        })
+
+        function getPageRankCalculation(selection)
+        {
+
+            const paramValue = selection;
+
+            const apiUrl = `https://localhost:7220/controller/PageRank?selection=${paramValue}`;
+
+            fetch(apiUrl) // API URL'sini buraya ekleyin
             .then(response => response.json())
             .then(data => {
                 // Veri çekildikten sonra yapılacak işlemler
@@ -73,12 +187,62 @@
             .catch(error => {
                 console.error('Veri çekme hatası:', error);
             });
+        }
 
+        // API'ye seçili değeri gönderen işlev
+        function sendSelectedValueToAPI(selectedValue) {
+            
+            const paramValue = selectedValue;
+
+            const apiUrl = `https://localhost:7220/controller/GetData?selection=${paramValue}`;
+
+
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json', // İsteğin içeriğinin JSON olduğunu belirtin (isteğe bağlı)
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Web API'den gelen veriyi kullanın
+                console.log(data); // Gelen veriyi konsola yazdırın
+
+                updateTables(data);
+            })
+            .catch(error => {
+                console.error('API ile iletişim hatası:', error);
+            });
+        }
+
+        function updateTables(data) {
+            const veriTablosu1 = document.getElementById('dataOutGoingTable');
+            const veriTablosu2 = document.getElementById('dataInComingTable');
+            const tboday1 = veriTablosu1.querySelector('tbody');
+            const tboday2 = veriTablosu2.querySelector('tbody');
+            tboday1.innerHTML = "";
+            tboday2.innerHTML = "";
+            // Önceki verileri temizle
+            // veriTablosu1.innerHTML = '';
+            // veriTablosu2.innerHTML = '';
+
+            // Verileri iki ayrı tabloya ekleyin
+            data.dataSet.forEach((dataset, index) => {
+                const veriTablosu = index === 0 ? veriTablosu1 : veriTablosu2;
+                const tbody = veriTablosu.querySelector('tbody');
+
+                // Veriyi tabloya ekleyin
+                Object.keys(dataset).forEach(node => {
+                    const connections = dataset[node].join(', ');
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${node}</td><td>${connections}</td>`;
+                    tbody.appendChild(row);
+                });
+            });
+        }
+        
         function visualizeData(data) {
-            // D3.js ile veriyi kullanarak görselleştirme kodunu buraya ekleyin
-
-            // Örnek: Veriyi kullanarak çemberleri ve bağları oluşturun
-
+            
             var svg = d3.select("svg"),
             width = +svg.attr("width"),
             height = +svg.attr("height");
@@ -100,8 +264,13 @@
             var nodes = data.rankList;
             var links = data.outGoings;
 
+            var existingRankListContainer = document.querySelector(".rank-list-container");
+            if (existingRankListContainer) {
+                existingRankListContainer.parentNode.removeChild(existingRankListContainer);
+            }
+
             // 'rankList' verilerini sırala ve sıralı bir liste oluştur
-            var container = document.querySelector(".container");
+            var container = document.querySelector("#dropdown-container");
             var sortedRankList = Object.entries(data.rankList)
             .sort((a, b) => b[1] - a[1]); // Büyükten küçüğe sıralama
 
@@ -128,8 +297,13 @@
             // Örnek: Düğümler arasındaki bağlantıları otomatik olarak oluşturun
 
             var outGoings = data.outGoings;
+            var inComings = data.inComings;
             var nodes = [];
             var links = [];
+
+            var incomingLinks = [];
+            var outgoingLinks = [];
+
 
             // Her bir düğüm için düğüm nesnesi oluşturun ve nodes listesine ekleyin
             Object.keys(outGoings).forEach(nodeId => {
@@ -145,37 +319,72 @@
                 });
             });
 
+            // Object.keys(outGoings).forEach(sourceNode => {
+            //     var connectedNodes = outGoings[sourceNode];
+                
+            //     connectedNodes.forEach(targetNode => {
+            //         outgoingLinks.push({ source: sourceNode, target: targetNode });
+            //     });
+            // });
+
+            // Object.keys(inComings).forEach(targetNode => {
+            //     var connectedNodes = inComings[targetNode];
+                
+            //     connectedNodes.forEach(sourceNode => {
+            //         incomingLinks.push({ source: sourceNode, target: targetNode });
+            //     });
+            // });
+
             var simulation = d3.forceSimulation(nodes)
-                .force("link", d3.forceLink(links).id(d => d.id).distance(200))
-                .force("charge", d3.forceManyBody().strength(-200))
+                .force("link", d3.forceLink(links).id(d => d.id).distance(250))
+                .force("charge", d3.forceManyBody().strength(-7000))
                 .force("center", d3.forceCenter(width / 2, height / 2))
                 .force("x", d3.forceX().x(d => d.x))
-                .force("y", d3.forceY().y(d => d.y));
-
-
-
-            
+                .force("y", d3.forceY().y(d => d.y))
+                .force("collision", d3.forceCollide().radius(function(d) {
+                    return 20 + 50 * data.rankList[d.id]; // Düğümün boyutunu burada kullanabilirsiniz
+                }));
 
             var link = svg.selectAll(".link")
-            .data(links)
-            .enter().append("path")
-            .attr("class", "link")
-            .attr("marker-end", "url(#arrow)")
-            .attr("d", d => {
-                var dx = d.target.x - d.source.x,
-                    dy = d.target.y - d.source.y,
-                    dr = Math.sqrt(dx * dx + dy * dy);
-                return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
-            });
-                
+                .data(links)
+                .enter().append("path")
+                .attr("class", "link")
+                .attr("marker-end", "url(#arrow)")
+                .style("stroke", "blue")
+                .attr("d", d => {
+                    var dx = d.target.x - d.source.x,
+                        dy = d.target.y - d.source.y,
+                        dr = Math.sqrt(dx * dx + dy * dy);
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                });
 
+            // var incomingLink = svg.selectAll(".incoming-link")
+            //     .data(incomingLinks)
+            //     .enter().append("path")
+            //     .attr("class", "incoming-link")
+            //     .attr("marker-end", "url(#arrow)")
+            //     .style("stroke", "green") // Gelen linkler yeşil
+            //     .attr("d", d => {
+            //         // Link çizimini burada tanımlayın
+            //     });
+
+            // var outgoingLink = svg.selectAll(".outgoing-link")
+            //     .data(outgoingLinks)
+            //     .enter().append("path")
+            //     .attr("class", "outgoing-link")
+            //     .attr("marker-end", "url(#arrow)")
+            //     .style("stroke", "blue") // Giden linkler mavi
+            //     .attr("d", d => {
+            //         // Link çizimini burada tanımlayın
+            //     });
+                
             // Ok başlığını tanımlayın
             svg.append("defs").append("marker")
                 .attr("id", "arrow")
                 .attr("viewBox", "0 -5 10 10")
                 .attr("refX", 20) // Okun yuvarlağın kenarından başlayacağı mesafe
                 .attr("refY", 0)
-                .attr("markerWidth", 20) // Okun genişliği
+                .attr("markerWidth", 15) // Okun genişliği
                 .attr("markerHeight", 20) // Okun yüksekliği
                 .attr("orient", "auto")
                 .append("path")
@@ -187,7 +396,7 @@
                 .attr("class", "node")
                 .attr("r", d => {
                     // Düğümün rank değerini kullanarak boyutu hesaplayın
-                    return 20 + 100 * data.rankList[d.id];
+                    return 20 + 50 * data.rankList[d.id];
                 })
                 .call(d3.drag()
                     .on("start", dragstarted)
@@ -203,14 +412,6 @@
                 .attr("y", d => d.y)
                 .attr("dy", "0.35em")
                 .attr("text-anchor", "middle");
-
-
-            
-
-            
-
-                
-
 
             simulation.on("tick", () => {
                 link.attr("d", d => {
@@ -249,6 +450,15 @@
             }
         }
         
+        function clearVisualization() {
+            // SVG içeriğini temizle
+            var svg = d3.select("svg");
+            svg.selectAll("*").remove();
+
+            // Rütbeye göre sıralanmış verileri içeren liste ve tabloyu temizle
+            var rankListContainer = document.querySelector(".rank-list-container");
+            rankListContainer.innerHTML = "";
+        }
     </script>
 </body>
 </html>
