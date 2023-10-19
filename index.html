@@ -126,6 +126,8 @@
         </div> -->
         <div id="dropdown-container">
             <div style="margin-bottom: 20px;">
+                <button id="zoomInButton">Yakınlaştır</button>
+                <button id="zoomOutButton">Uzaklaştır</button>
                 <span>Zoom: </span>
                 <span id="zoomValue">1</span>
             </div>
@@ -133,8 +135,9 @@
             <div class="select-container">
                 <label for="dropdown">Select Data Set:</label>
                 <select id="dropdown">
+                    <option value="D">D is most valuable</option>,
                     <option value="A">A is most valuable</option>
-                    <option value="D">D is most valuable</option>
+
                 </select>
                 <button id="myButton">Buton</button>
             </div>
@@ -167,6 +170,10 @@
                 </table>
             </div>
             <button id="calculateBtn">Calculate</button>
+            <label for="filterDropdown">Select Data:</label>
+                <select id="filterDropdown">
+                </select>
+            <button id="filterBtn">FILTER</button>
         </div>
         
     </div>
@@ -174,14 +181,74 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             getPageRankCalculation("d");
+            zoom();
         });
 
         // Dropdown ve buton öğelerini seçin
-        var dropdown = document.getElementById("dropdown");
+        var dropdown = document.getElementById("dropdown"); 
         var myButton = document.getElementById("myButton");
         var calculateBtn = document.getElementById("calculateBtn")
         var currentSelection = "";
-        // Butona tıklama olayını ekle
+        var currentData;
+        var isFiltering = false
+
+        var filterDropdown = document.getElementById("filterDropdown");
+        var filterBtn = document.getElementById("filterBtn");
+
+        filterBtn.addEventListener("click", function () {
+            var selectedValue = filterDropdown.value;
+            isFiltering = true;
+            filterGraph(selectedValue);
+        });
+
+        function filterGraph(selectedNodeId) {
+            // Seçilen düğüme bağlı olarak, nodes ve links dizilerini filtreleyin.
+
+            // var data = getPageRankCalculation(currentSelection);
+            var data = currentData;
+            
+
+            const filteredData = {
+                inComings: {},
+                outGoings: {},
+                rankList: {}
+            };
+
+            filteredData.rankList = data.rankList;
+            for (const node in data.inComings) {
+
+                if(selectedNodeId == node)
+                {
+                    filteredData.inComings[node] = data.inComings[node];
+                }
+            }
+            for (const node in data.outGoings) {
+
+                if(selectedNodeId == node)
+                {
+                    filteredData.outGoings[node] = data.outGoings[node];
+                }
+            }
+
+
+            console.log(filteredData);
+            
+            // var filteredNodes = nodes.filter(function(node) {
+            //     return node.id === selectedNodeId;
+            // });
+
+            // var filteredLinks = links.filter(function(link) {
+            //     return link.source === selectedNodeId || link.target === selectedNodeId;
+            // });
+
+            // SVG'yi temizle
+            clearVisualization()
+
+            // Filtrelenmiş düğümleri ve bağlantıları çizin
+            visualizeData(filteredData);
+            isFiltering = false;
+        }
+
         myButton.addEventListener("click", function () {
             // Seçili değeri alın
             var selectedValue = dropdown.value;
@@ -209,11 +276,25 @@
                 console.log(data); // Veriyi konsola yazdırabilirsiniz
 
                 // Görselleştirme kodu buraya gelecek
+                currentData = data;
                 visualizeData(data);
             })
             .catch(error => {
                 console.error('Veri çekme hatası:', error);
             });
+            // return    fetch(apiUrl) // API URL'sini buraya ekleyin
+            //     .then(response => response.json())
+            //     .then(data => {
+            //         // Veri çekildikten sonra yapılacak işlemler
+            //         console.log(data); // Veriyi konsola yazdırabilirsiniz
+
+            //         // Görselleştirme kodu buraya gelecek
+            //         // visualizeData(data);
+            //         return data;
+            //     })
+            //     .catch(error => {
+            //         console.error('Veri çekme hatası:', error);
+            //     });
         }
 
         // API'ye seçili değeri gönderen işlev
@@ -247,11 +328,20 @@
             const veriTablosu2 = document.getElementById('dataInComingTable');
             const tboday1 = veriTablosu1.querySelector('tbody');
             const tboday2 = veriTablosu2.querySelector('tbody');
+            const filterDropdown  = document.getElementById('filterDropdown');
             tboday1.innerHTML = "";
             tboday2.innerHTML = "";
             // Önceki verileri temizle
             // veriTablosu1.innerHTML = '';
             // veriTablosu2.innerHTML = '';
+            filterDropdown.innerHTML = "";
+
+            Object.keys(data.dataSet[0]).forEach(function(key) {
+                var option = document.createElement("option");
+                option.value = key;
+                option.text = key;
+                filterDropdown.appendChild(option);
+            });
 
             // Verileri iki ayrı tabloya ekleyin
             data.dataSet.forEach((dataset, index) => {
@@ -344,6 +434,44 @@
                 nodes.push({ id: nodeId, x: Math.random() * width, y: Math.random() * height });
             });
 
+
+
+            if(isFiltering)
+            {
+                //Filtreleme için incomings
+                Object.keys(inComings).forEach(nodeId => {
+                    var Nodess = inComings[nodeId];
+                    
+                    Nodess.forEach(targetNode => {
+                        if (!nodes.some(node => node.id === targetNode)) {
+                            nodes.push({ id: targetNode, x: Math.random() * width, y: Math.random() * height });
+                        }
+                    });
+                });
+                //Filtreleme için incomings
+                Object.keys(outGoings).forEach(nodeId => {
+                    var Nodess = outGoings[nodeId];
+                    
+                    Nodess.forEach(targetNode => {
+                        if (!nodes.some(node => node.id === targetNode)) {
+                            nodes.push({ id: targetNode, x: Math.random() * width, y: Math.random() * height });
+                        }
+                    });
+                });
+
+                //link için incomings
+                Object.keys(inComings).forEach(sourceNode => {
+                    var inComingNodes = inComings[sourceNode];
+                    
+                    inComingNodes. forEach(targetNode => {
+                        links.push({ source: targetNode, target: sourceNode});
+                    });
+                });
+            }
+
+           
+
+
             // Her bir bağlantıyı oluşturun ve links listesine ekleyin
             Object.keys(outGoings).forEach(sourceNode => {
                 var connectedNodes = outGoings[sourceNode];
@@ -369,8 +497,28 @@
             //     });
             // });
 
+            // var simulation = d3.forceSimulation(nodes)
+            //     .force("link", d3.  forceLink(links).id(d => d.id).distance(1000))
+            //     .force("charge", d3.forceManyBody().strength(-7000))
+            //     .force("center", d3.forceCenter(width / 2, height / 2))
+            //     .force("x", d3.forceX().x(d => d.x))
+            //     .force("y", d3.forceY().y(d => d.y))
+            //     .force("collision", d3.forceCollide().radius(function(d) {
+            //         return 20 + 50 * data.rankList[d.id]; // Düğümün boyutunu burada kullanabilirsiniz
+            //     }));
+
+            // Her bağlantı için bağlantı uzunluğunu hesaplayın
+            links.forEach(link => {
+                const sourceNode = nodes.find(node => node.id === link.source);
+                const targetNode = nodes.find(node => node.id === link.target);
+                const sourceRadius = 20 + 50 * data.rankList[sourceNode.id]; // Kaynak düğümün boyutu
+                const targetRadius = 20 + 50 * data.rankList[targetNode.id]; // Hedef düğümün boyutu
+                link.distance = sourceRadius + targetRadius; // Bağlantı uzunluğu
+            });
+
+            // D3 kuvvet simülasyonunu oluşturun ve bağlantı uzaklığını kullanın
             var simulation = d3.forceSimulation(nodes)
-                .force("link", d3.forceLink(links).id(d => d.id).distance(250))
+                .force("link", d3.forceLink(links).id(d => d.id).distance(d => d.distance))
                 .force("charge", d3.forceManyBody().strength(-7000))
                 .force("center", d3.forceCenter(width / 2, height / 2))
                 .force("x", d3.forceX().x(d => d.x))
@@ -431,6 +579,8 @@
                 .attr("r", d => {
                     // Düğümün rank değerini kullanarak boyutu hesaplayın
                     return 20 + 50 * data.rankList[d.id];
+
+                      
                 })
                 .call(d3.drag()
                     .on("start", dragstarted)
@@ -493,6 +643,7 @@
             var rankListContainer = document.querySelector(".rank-list-container");
             rankListContainer.innerHTML = "";
         }
+        
         function zoom()
         {
             const svgImage = document.getElementById("svgImage");
@@ -552,6 +703,34 @@
                 isPanning = false;
             }
         }
+    
+        // document.getElementById('zoomOutButton').addEventListener('click', function() {
+        //     performZoom(5.1); // 1.1 ile yakınlaştırma işlemi yapar
+        // });
+
+        // document.getElementById('zoomInButton').addEventListener('click', function() {
+        //     performZoom(0.9); // 0.9 ile uzaklaştırma işlemi yapar
+        // });
+
+        // function performZoom(zoomFactor) {
+        //     const svgImage = document.getElementById("svgImage");
+        //     const svgContainer = document.getElementById("svgContainer");
+
+        //     var viewBox = { x: 0, y: 0, w: svgImage.clientWidth, h: svgImage.clientHeight };
+        //     svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+        //     const svgSize = { w: svgImage.clientWidth, h: svgImage.clientHeight };
+
+        //     var w = viewBox.w;
+        //     var h = viewBox.h;
+        //     var dw = w * (zoomFactor - 1);
+        //     var dh = h * (zoomFactor - 1);
+        //     viewBox = { x: viewBox.x - dw / 2, y: viewBox.y - dh / 2, w: viewBox.w + dw, h: viewBox.h + dh };
+        //     const scale = svgSize.w / viewBox.w;
+
+        //     zoomValue.innerText = `${Math.round(scale * 100) / 100}`;
+        //     svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+        // }
+
     </script>
 </body>
 </html>
