@@ -30,6 +30,7 @@
 
     // Canvas elementi seçimi
     const apiUrlData = 'https://localhost:7220/controller/LinearRegression/GetRawData';
+    const apiUrlLine = 'https://localhost:7220/controller/LinearRegression/GetLinearLine';
     const apiUrlPrediction = 'https://localhost:7220/controller/LinearRegression/MakePrediction';
     const ctx = document.getElementById('myChart').getContext('2d');
     const myChart = new Chart(ctx, {
@@ -53,7 +54,7 @@
     }
     });
 
-    fetch(apiUrlData)
+    fetch(apiUrlData) //Raw data
     .then(response => {
         if (!response.ok) {
         throw new Error('Network response was not ok.');
@@ -68,6 +69,43 @@
         // Veriyi grafiğe ekleme
         myChart.data.labels = xValues;
         myChart.data.datasets[0].data = yValues;
+
+        // Güncellenmiş veriyle grafiği güncelleme
+        myChart.update();
+    })
+    .catch(error => {
+        console.error('There has been a problem with your fetch operation:', error);
+    });
+
+    fetch(apiUrlLine) // Doğru verileri alma
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const slope = data.slope; // Eğim değeri
+        const intercept = data.intercept; // Kısıtlama değeri
+
+        // Mevcut x değerleri içinde en küçük ve en büyük x değerlerini bulma
+        const minX = Math.min(...xValues);
+        const maxX = Math.max(...xValues);
+
+        // Doğru verileri oluşturma sadece min ve max x değerleri için
+        const lineData = [];
+        lineData.push({ x: minX, y: slope * minX + intercept });
+        lineData.push({ x: maxX, y: slope * maxX + intercept });
+
+        // Veriyi grafiğe ekleme
+        myChart.data.datasets.push({
+            label: 'Doğru',
+            data: lineData,
+            fill: false,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 2,
+            lineTension: 0,
+        });
 
         // Güncellenmiş veriyle grafiği güncelleme
         myChart.update();
@@ -106,13 +144,14 @@
 
         // Yeni veri ekleme
         var indexToInsert = xValues.findIndex(x => x > xValue);
-        xValues.splice(indexToInsert, 0, 1.5);
-        // xValues.push(xValue);
+        // xValues.splice(indexToInsert, 0, xValue);
+        xValues.push(xValue);
         yValues.push(predictionY);
 
         // Veriyi grafiğe ekleme
         myChart.data.labels = xValues;
         myChart.data.datasets[0].data = yValues;
+
 
         // Güncellenmiş veriyle grafiği güncelleme
         myChart.update();
