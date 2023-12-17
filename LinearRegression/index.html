@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Görselleştirilmiş Grafik</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    canvas {
+        border: 1px solid #000;
+        width: 300px;
+        height: 300px;
+    }
+    #chartContainer {
+        width: 600px;
+        height: 600px;
+    }
+</style>
+</head>
+<body>
+    <div id="chartContainer">,
+        <input type="number" id="inputValue" placeholder="X değeri girin">
+        <button id="addDataBtn">Veri Ekle</button>
+        <canvas id="myChart" width="400" height="400"></canvas>
+        
+    </div>
+
+  <script>
+    // x ve y değerleri
+    let xValues = [];
+    let yValues = [];
+
+    // Canvas elementi seçimi
+    const apiUrlData = 'https://localhost:7220/controller/LinearRegression/GetRawData';
+    const apiUrlPrediction = 'https://localhost:7220/controller/LinearRegression/MakePrediction';
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [], // xValues
+        datasets: [{
+        label: 'Grafik Verisi',
+        data: [], // yValues
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+        y: {
+            beginAtZero: true
+        }
+        }
+    }
+    });
+
+    fetch(apiUrlData)
+    .then(response => {
+        if (!response.ok) {
+        throw new Error('Network response was not ok.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Gelen veriyi xValues ve yValues olarak ayarlama
+        xValues = data.x; // Örnek olarak gelen verinin xValues alanı
+        yValues = data.y; // Örnek olarak gelen verinin yValues alanı
+
+        // Veriyi grafiğe ekleme
+        myChart.data.labels = xValues;
+        myChart.data.datasets[0].data = yValues;
+
+        // Güncellenmiş veriyle grafiği güncelleme
+        myChart.update();
+    })
+    .catch(error => {
+        console.error('There has been a problem with your fetch operation:', error);
+    });
+
+
+
+    // document.getElementById('addDataBtn').addEventListener('click', function() {
+    //   // Yeni veri ekleme
+      
+    //   var indexToInsert = xValues.findIndex(x => x > 1); // 1 ve 2 arasına eklemek için uygun indeksi bulma
+    //   xValues.splice(indexToInsert, 0, 1.5); // xValues dizisine 1.5'i ekler
+    //   yValues.splice(indexToInsert, 0, 10); // yValues dizisine 10'u ekler
+
+    //   // Veriyi grafiğe ekleme
+    //   myChart.data.labels = xValues;
+    //   myChart.data.datasets[0].data = yValues;
+
+    //   // Güncellenmiş veriyle grafiği güncelleme
+    //   myChart.update();
+    // });
+
+
+    async function makePredictionAndAddToChart(xValue) {
+      try {
+        const response = await fetch(`${apiUrlPrediction}?x=${xValue}`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok.');
+        }
+        const data = await response.json();
+        const predictionY = data;
+        console.log(data);
+
+        // Yeni veri ekleme
+        var indexToInsert = xValues.findIndex(x => x > xValue);
+        xValues.splice(indexToInsert, 0, 1.5);
+        // xValues.push(xValue);
+        yValues.push(predictionY);
+
+        // Veriyi grafiğe ekleme
+        myChart.data.labels = xValues;
+        myChart.data.datasets[0].data = yValues;
+
+        // Güncellenmiş veriyle grafiği güncelleme
+        myChart.update();
+      } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
+      }
+    }
+
+    document.getElementById('addDataBtn').addEventListener('click', function() {
+      const inputValue = document.getElementById('inputValue').value;
+      makePredictionAndAddToChart(inputValue);
+    });
+  </script>
+</body>
+</html>

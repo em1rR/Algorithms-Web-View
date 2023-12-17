@@ -10,7 +10,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh; /* Ekran yüksekliği kadar alan kapla */
+            flex-direction: row;
+            height: 90vh; /* Ekran yüksekliği kadar alan kapla */
         }
 
         svg {
@@ -43,14 +44,15 @@
             fill: #ccc;
         }
         #dropdown-container {
-            position: relative; 
+            position: fixed; 
             top: 20px;
             right: 20px;
-            left: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             z-index: 999;
+            max-width: 385px;
+
         }
 
         #dropdown {
@@ -92,6 +94,8 @@
         }
         .rank-list-container {
             margin-left: 10px;
+            max-height: 200px; 
+            overflow-y: scroll;
         }
 
         .svg-container {
@@ -109,6 +113,21 @@
         /* İstediğiniz zoom seviyesini ayarlayın (örneğin, 1.5 kat zoom) */
         .svg-zoomed {
             transform: scale(1.5);
+        }
+
+        #svgContainer {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+        }
+
+        .filter-container {
+            margin-top: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            top: 10px;
         }
 
 
@@ -141,7 +160,7 @@
                 </select>
                 <button id="myButton">Buton</button>
             </div>
-            <div class="table-container">
+            <div class="table-container" style="max-height: 400px; overflow-y: scroll;">
                 <table id="dataOutGoingTable">
                     <thead>
                         <tr>
@@ -170,10 +189,13 @@
                 </table>
             </div>
             <button id="calculateBtn">Calculate</button>
-            <label for="filterDropdown">Select Data:</label>
+            <div class="filter-container">
+                <label for="filterDropdown">Select Data:</label>
                 <select id="filterDropdown">
                 </select>
-            <button id="filterBtn">FILTER</button>
+                <button id="filterBtn">FILTER</button>
+            </div>
+            
         </div>
         
     </div>
