@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Görselleştirilmiş Grafik</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        canvas {
+            border: 1px solid #000;
+            width: 300px;
+            height: 300px;
+        }
+
+        #chartContainer {
+            width: 600px;
+            height: 600px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chartContainer">,
+        <input type="number" id="inputValue" placeholder="X değeri girin">
+        <button id="addDataBtn">Clustering</button>
+        <canvas id="myChart" width="400" height="400"></canvas>
+    </div>
+
+    <script>
+        // x ve y değerleri
+        const xValues = Array.from({ length: 10 }, (_, i) => i * 1 + 1);
+        // const yValues = [2, 4, 6, 8, 5, 7, 3, 9, 1, 10];
+        const yValues = [1, 10];
+        const yValues_v1 = [8, 5, 7, 3, 9, 1, 10];
+        const specificPointLine = [{ x: 30, y: 5 }, { x: 80, y: 20 },];
+
+        // Canvas elementi seçimi
+        const apiUrlData = 'https://localhost:7220/controller/K-Means-GetData';
+        const apiUrlCalculation = 'https://localhost:7220/controller/K-Means';
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: xValues,
+                datasets: [{
+                    label: 'Grafik Verisi',
+                    data: specificPointLine,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    pointRadius: [5, 5, 5, 5], // Nokta boyutları
+                    pointStyle: 'circle', // Nokta stilini daire olarak belirle
+                    showLine: true // Çizgiyi göster
+                },{
+                    label: 'cluster1',
+                    data: [],
+                    pointRadius: 2,
+                    pointStyle: 'circle',
+                    backgroundColor: 'red',
+                    borderColor: 'red',
+                    borderWidth: 2,
+                    showLine: false
+                },{
+                    label: 'cluster2',
+                    data: [],
+                    pointRadius: 2,
+                    pointStyle: 'circle',
+                    backgroundColor: 'blue',
+                    borderColor: 'blue',
+                    borderWidth: 2,
+                    showLine: false
+                },{
+                    label: 'cluster3',
+                    data: [],
+                    pointRadius: 2,
+                    pointStyle: 'circle',
+                    backgroundColor: 'green',
+                    borderColor: 'green',
+                    borderWidth: 2,
+                    showLine: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: 0,
+                        max: 20
+                    },
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 20 
+                    }
+                }
+            }
+        });
+
+        fetch(apiUrlData)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                
+                data.forEach(element => {
+                    console.log("x:" + element.x + ", y:" + element.y);
+                    const point = { x: element.x, y: element.y };
+                    myChart.data.datasets[1].data.push(point);
+                });
+                myChart.update();
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
+
+        async function makePredictionAndAddToChart(xValue) {
+            try {
+                const response = await fetch(`${apiUrlCalculation}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                const data = await response.json();
+                const predictionY = data;
+                console.log(data);
+                console.log("k-means");
+                // Yeni veri ekleme
+                var cluster = 1;
+                data.forEach(element => {
+                    debugger
+                    myChart.data.datasets[cluster].data = [];
+                    element.points.forEach(point => {
+                        const pointN = { x: point.x, y: point.y };
+                        myChart.data.datasets[cluster].data.push(pointN);
+                    });
+                    cluster++;
+                });
+                myChart.update();
+
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+            }
+        }
+
+        document.getElementById('addDataBtn').addEventListener('click', function () {
+            const inputValue = document.getElementById('inputValue').value;
+            makePredictionAndAddToChart(inputValue);
+        });
+
+    </script>
+</body>
+
+</html>
