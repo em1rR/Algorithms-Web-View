@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Görselleştirilmiş Grafik</title>
+  <title>Linear Regression Graphic</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     canvas {
@@ -17,7 +17,7 @@
 </head>
 <body>
     <div id="chartContainer">
-      <h1>regression</h1>
+      <h1>Linear Regression</h1>
         <input type="number" id="inputValue" placeholder="X değeri girin">
         <button id="addDataBtn">Calculation</button>
         <br>
@@ -93,7 +93,7 @@
             y: {
                 beginAtZero: true,
                 min: 0,
-                max: 20 // Özel noktanın y değerine göre ölçeklendir
+                max: 20 
             }
         }
     }
@@ -157,7 +157,7 @@
           return response.json();
       })
       .then(data => {
-        debugger;
+        //debugger;
           console.log("data:"+data[0].x);
           console.log("data:"+data[0].y);
 

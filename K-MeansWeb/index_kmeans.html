@@ -20,7 +20,7 @@
 
 <body>
     <div id="chartContainer">,
-        <input type="number" id="inputValue" placeholder="X değeri girin">
+        <input type="number" id="inputValue" placeholder="enter number of clusters">
         <button id="addDataBtn">Clustering</button>
         <canvas id="myChart" width="400" height="400"></canvas>
     </div>
@@ -117,9 +117,10 @@
                 console.error('There has been a problem with your fetch operation:', error);
             });
 
-        async function makePredictionAndAddToChart(xValue) {
+            async function makeClusters(xValue) {
             try {
-                const response = await fetch(`${apiUrlCalculation}`);
+                //const response = await fetch(`${apiUrlCalculation}`);
+                const response = await fetch(`${apiUrlCalculation}?clusterNumber=${xValue}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok.');
                 }
@@ -130,7 +131,6 @@
                 // Yeni veri ekleme
                 var cluster = 1;
                 data.forEach(element => {
-                    debugger
                     myChart.data.datasets[cluster].data = [];
                     element.points.forEach(point => {
                         const pointN = { x: point.x, y: point.y };
@@ -147,7 +147,7 @@
 
         document.getElementById('addDataBtn').addEventListener('click', function () {
             const inputValue = document.getElementById('inputValue').value;
-            makePredictionAndAddToChart(inputValue);
+            makeClusters(inputValue);
         });
 
     </script>

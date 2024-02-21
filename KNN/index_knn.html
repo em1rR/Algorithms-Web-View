@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Görselleştirilmiş Grafik</title>
+    <title>KNN Graphic</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         canvas {
@@ -39,6 +39,8 @@
         const apiUrlData = 'https://localhost:7220/controller/K-Means-GetData';
         const apiUrlCalculation = 'https://localhost:7220/controller/K-Means';
         const apiUrlKNN = 'https://localhost:7220/controller/KNN';
+        const apiUrlKNNWithNewValue = 'https://localhost:7220/controller/KNNWithNewValue';
+
 
         const ctx = document.getElementById('myChart').getContext('2d');
         const myChart = new Chart(ctx, {
@@ -134,7 +136,7 @@
                 console.log(data);
                 console.log("k-means");
                 // Yeni veri ekleme
-                debugger
+                //debugger
                 // var cluster = 1;
                 // data.forEach(element => {
                 //     myChart.data.datasets[cluster].data = [];
@@ -168,7 +170,7 @@
                 const data = await response.text();
                 const clusterPrediction = data;
                 const numericPart = parseInt(data.replace("Cluster", ""), 10);
-                debugger
+               //debugger
                 console.log('Numeric değer:', numericPart); // Numeric değer: 1
                 console.log(`x=${xValue}, y=${yValue} noktası: ${clusterPrediction} clusterina aittir.`);
                 // console.log(data);
@@ -182,7 +184,7 @@
         }
         async function makePredictionWithNewPointsAndAddToChart(xValue, yValue) {
             try {
-                const response = await fetch(`${apiUrlKNN}?X=${xValue}&Y=${yValue}`);
+                const response = await fetch(`${apiUrlKNNWithNewValue}?X=${xValue}&Y=${yValue}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok.');
                 }
