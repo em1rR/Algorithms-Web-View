@@ -30,3 +30,19 @@ This page displays clusters on a graph, allowing users to input new x and y valu
 ![KNN](https://github.com/em1rR/PageRankWebView/assets/46686523/de1bc17c-0d88-48ba-a328-6282a15f314f)
 <br/><br/>
 ![KNN2](https://github.com/em1rR/PageRankWebView/assets/46686523/143ca515-d301-4724-9ed3-94c88dce1102)
+
+
+
+
+PageRank
+------------
+This page displays the PageRank algorithm results with an accompanying graph. Users first select a dataset, then click "calculate" to generate the graph based on this dataset. In the graph, larger nodes represent more important pages with higher ranks. Below the graph, users can select a filter for each node to display only that node and its connected ones.
+<br/><br/>
+<br/><br/>
+![1](https://github.com/em1rR/PageRankWebView/assets/46686523/7a39fc65-efb9-4428-b81f-973cf6c5322a)
+<br/><br/>
+![filter](https://github.com/em1rR/PageRankWebView/assets/46686523/e77ba312-522c-456f-9141-46b1988821fe)
+<br/><br/>
+![3](https://github.com/em1rR/PageRankWebView/assets/46686523/7bf81b9a-2592-4811-acf2-e054227cf05f)
+<br/><br/>
+
